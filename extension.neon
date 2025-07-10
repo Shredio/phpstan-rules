@@ -1,11 +1,15 @@
 parametersSchema:
-	shredio:
-		getObjectVarsStaticMethod:
+	shredio: structure([
+		getObjectVarsStaticMethod: structure([
 			class: string()
 			method: string()
-		getObjectVarsByReferenceStaticMethod:
+		])
+
+		getObjectVarsByReferenceStaticMethod: structure([
 			class: string()
 			method: string()
+		])
+	])
 
 services:
 	-
