@@ -1,0 +1,11 @@
+services:
+	-
+		class: Shredio\PhpstanRules\TypeExtension\GetObjectVarsMethodReturnTypeExtension
+		arguments: [Tests\Common\ObjectHelper, toArray]
+		tags:
+			- phpstan.broker.dynamicStaticMethodReturnTypeExtension
+	-
+		class: Shredio\PhpstanRules\TypeExtension\GetObjectVarsByReferenceMethodReturnTypeExtension
+		arguments: [Tests\Common\ObjectHelper, toArrayByReference]
+		tags:
+			- phpstan.broker.dynamicStaticMethodReturnTypeExtension

@@ -1,0 +1,6 @@
+services:
+	-
+		class: Shredio\PhpstanRules\Rule\GetObjectVarsByReferenceRule
+		arguments: [Tests\Common\ObjectHelper, 'toArrayByReference']
+		tags:
+			- phpstan.rules.rule
