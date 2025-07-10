@@ -1,11 +1,3 @@
-parametersSchema:
-	shredio: structure([
-		getObjectVarsByReferenceStaticMethod: structure([
-			class: string()
-			method: string()
-		])
-	])
-
 services:
 	-
 		class: Shredio\PhpstanRules\Rule\GetObjectVarsByReferenceRule
