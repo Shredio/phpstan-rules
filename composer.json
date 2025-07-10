@@ -3,7 +3,7 @@
 	"type": "phpstan-extension",
 	"license": "MIT",
 	"require": {
-		"php": ">=8.3"
+		"php": ">=8.4"
 	},
 	"autoload": {
 		"psr-4": {
