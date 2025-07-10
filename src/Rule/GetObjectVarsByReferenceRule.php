@@ -38,6 +38,10 @@ final readonly class GetObjectVarsByReferenceRule implements Rule
 			return [];
 		}
 
+		if (!$node->class instanceof Node\Name) {
+			return [];
+		}
+
 		$calledOnClass = $node->class->name;
 		if ($calledOnClass !== $this->className) {
 			return [];

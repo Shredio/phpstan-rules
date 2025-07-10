@@ -7,7 +7,6 @@ use PhpParser\Node\Expr\StaticCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\MethodReflection;
-use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\Constant\ConstantArrayType;
 use PHPStan\Type\Constant\ConstantArrayTypeBuilder;
 use PHPStan\Type\Constant\ConstantStringType;
@@ -15,7 +14,6 @@ use PHPStan\Type\DynamicStaticMethodReturnTypeExtension;
 use PHPStan\Type\NeverType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
-use PHPStan\Type\VerbosityLevel;
 
 final readonly class GetObjectVarsByReferenceMethodReturnTypeExtension implements DynamicStaticMethodReturnTypeExtension
 {
@@ -26,7 +24,6 @@ final readonly class GetObjectVarsByReferenceMethodReturnTypeExtension implement
 	public function __construct(
 		private string $className,
 		private string $methodName,
-		private ReflectionProvider $reflectionProvider,
 	)
 	{
 	}
@@ -70,6 +67,9 @@ final readonly class GetObjectVarsByReferenceMethodReturnTypeExtension implement
 			return null;
 		}
 		$reflectionReferenceClass = $this->getReflectionClassFromType($referenceType->getClassStringObjectType());
+		if ($reflectionReferenceClass === null) {
+			return null;
+		}
 
 		$constructor = $reflectionReferenceClass->getNativeReflection()->getConstructor();
 		if ($constructor === null || !$constructor->isPublic()) {
