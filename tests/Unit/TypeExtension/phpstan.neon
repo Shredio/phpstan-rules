@@ -1,5 +1,7 @@
 services:
 	-
+		class: Shredio\PhpstanRules\Helper\PhpStanReflectionHelper
+	-
 		class: Shredio\PhpstanRules\TypeExtension\GetObjectVarsMethodReturnTypeExtension
 		arguments: [Tests\Common\ObjectHelper, toArray]
 		tags:
@@ -9,3 +11,11 @@ services:
 		arguments: [Tests\Common\ObjectHelper, toArrayByReference]
 		tags:
 			- phpstan.broker.dynamicStaticMethodReturnTypeExtension
+	-
+		class: Shredio\PhpstanRules\TypeExtension\OmitTypeNodeResolverExtension
+		tags:
+			- phpstan.phpDoc.typeNodeResolverExtension
+	-
+		class: Shredio\PhpstanRules\TypeExtension\PropsOfTypeNodeResolverExtension
+		tags:
+			- phpstan.phpDoc.typeNodeResolverExtension

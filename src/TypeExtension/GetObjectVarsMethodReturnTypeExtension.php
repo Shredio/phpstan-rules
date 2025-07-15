@@ -9,6 +9,8 @@ use PHPStan\Type\Constant\ConstantArrayTypeBuilder;
 use PHPStan\Type\Constant\ConstantStringType;
 use PHPStan\Type\DynamicStaticMethodReturnTypeExtension;
 use PHPStan\Type\Type;
+use PHPStan\Type\TypeCombinator;
+use Shredio\PhpstanRules\Helper\PhpStanReflectionHelper;
 
 final readonly class GetObjectVarsMethodReturnTypeExtension implements DynamicStaticMethodReturnTypeExtension
 {
@@ -19,6 +21,7 @@ final readonly class GetObjectVarsMethodReturnTypeExtension implements DynamicSt
 	public function __construct(
 		private string $className,
 		private string $methodName,
+		private PhpStanReflectionHelper $reflectionHelper,
 	)
 	{
 	}
@@ -49,21 +52,16 @@ final readonly class GetObjectVarsMethodReturnTypeExtension implements DynamicSt
 			return null;
 		}
 
-		$reflectionClass = $objectType->getObjectClassReflections()[0] ?? null;
-		if ($reflectionClass === null) {
-			return null;
-		}
-
-		$builder = ConstantArrayTypeBuilder::createEmpty();
-		foreach ($reflectionClass->getNativeReflection()->getProperties() as $property) {
-			if (!$property->isPublic() || $property->isStatic()) {
-				continue;
+		$types = [];
+		foreach ($objectType->getObjectClassReflections() as $classReflection) {
+			$builder = ConstantArrayTypeBuilder::createEmpty();
+			foreach ($this->reflectionHelper->getTypeOfReadablePropertiesFromReflection($classReflection) as $propertyName => $propertyType) {
+				$builder->setOffsetValueType(new ConstantStringType($propertyName), $propertyType);
 			}
-
-			$builder->setOffsetValueType(new ConstantStringType($property->name), $reflectionClass->getProperty($property->name, $scope)->getReadableType());
+			$types[] = $builder->getArray();
 		}
 
-		return $builder->getArray();
+		return TypeCombinator::union(...$types);
 	}
 
 }
