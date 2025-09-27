@@ -1,0 +1,8 @@
+#services:
+#	-
+#		class: Shredio\PhpstanRules\Helper\PhpStanReflectionHelper
+#	-
+#		class: Shredio\PhpstanRules\Rule\CloneWithRule
+#		arguments: [Tests\Common\DataTransferObject, 'cloneWith']
+#		tags:
+#			- phpstan.rules.rule

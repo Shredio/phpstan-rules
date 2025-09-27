@@ -8,7 +8,6 @@ use PHPStan\PhpDoc\TypeNodeResolverAwareExtension;
 use PHPStan\PhpDoc\TypeNodeResolverExtension;
 use PHPStan\PhpDocParser\Ast\Type\GenericTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
-use PHPStan\Reflection\ClassReflection;
 use PHPStan\Type\Constant\ConstantArrayTypeBuilder;
 use PHPStan\Type\Constant\ConstantStringType;
 use PHPStan\Type\Type;

@@ -15,12 +15,23 @@ final readonly class ObjectHelper
 
 	/**
 	 * @param class-string<object> $reference
-	 * @param array<string, mixed> $values
-	 * @return array<string, mixed>
+	 * @param array<non-empty-string, mixed> $values
+	 * @return array<non-empty-string, mixed>
 	 */
 	public static function toArrayByReference(object $object, string $reference, array $values = []): array
 	{
 		return array_merge(get_object_vars($object), $values);
+	}
+
+	/**
+	 * @template T of object
+	 * @param class-string<T> $className
+	 * @param array<non-empty-string, mixed> $values
+	 * @return T
+	 */
+	public static function objectToClass(object $object, string $className, array $values = []): object
+	{
+		return new $className(...self::toArrayByReference($object, $className, $values));
 	}
 
 }

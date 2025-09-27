@@ -1,0 +1,8 @@
+services:
+	-
+		class: Shredio\PhpstanRules\Helper\PhpStanReflectionHelper
+	-
+		class: Shredio\PhpstanRules\TypeExtension\ObjectVarsMethodReturnTypeExtension
+		arguments: [Tests\Common\DataTransferObject, toArray]
+		tags:
+			- phpstan.broker.dynamicMethodReturnTypeExtension
