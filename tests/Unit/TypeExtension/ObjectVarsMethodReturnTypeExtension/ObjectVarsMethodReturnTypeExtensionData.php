@@ -3,7 +3,6 @@
 namespace Tests\Unit\TypeExtension\ObjectVarsMethodReturnTypeExtension;
 
 use Tests\Common\DataTransferObject;
-use Tests\Common\ObjectHelper;
 use function PHPStan\Testing\assertType;
 
 final readonly class ObjectVarsMethodReturnTypeExtensionData
@@ -68,6 +67,24 @@ final readonly class ObjectVarsMethodReturnTypeExtensionData
 				assertType('array{name: string}', $this->toArray());
 			}
 		};
+	}
+
+	public function testOverride(): void
+	{
+		$object = new class extends DataTransferObject {
+			public int $id = 1;
+			public string $name = 'Test Name';
+
+			/**
+			 * @return array{ other: string }
+			 */
+			public function toArray(array $options = []): array
+			{
+				return [];
+			}
+		};
+
+		assertType('array{other: string}', $object->toArray());
 	}
 
 }

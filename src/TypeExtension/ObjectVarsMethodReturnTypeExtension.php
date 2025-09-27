@@ -45,8 +45,13 @@ final readonly class ObjectVarsMethodReturnTypeExtension implements DynamicMetho
 		MethodReflection $methodReflection,
 		MethodCall $methodCall,
 		Scope $scope,
-	): Type
+	): ?Type
 	{
+		$declaringClassName = $methodReflection->getDeclaringClass()->getName();
+		if ($declaringClassName !== $this->className) {
+			return null; // method is overridden in a child class, use type-hint from there
+		}
+
 		// options
 		$optionsArg = $methodCall->getArgs()[0] ?? null;
 		$optionsType = $optionsArg === null ? null : $scope->getType($optionsArg->value);
