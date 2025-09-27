@@ -6,3 +6,4 @@ services:
 		arguments: [Tests\Common\DataTransferObject, toArray]
 		tags:
 			- phpstan.broker.dynamicMethodReturnTypeExtension
+			- phpstan.broker.dynamicStaticMethodReturnTypeExtension

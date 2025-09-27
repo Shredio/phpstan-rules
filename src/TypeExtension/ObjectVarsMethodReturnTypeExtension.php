@@ -4,6 +4,8 @@ namespace Shredio\PhpstanRules\TypeExtension;
 
 use LogicException;
 use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Expr\StaticCall;
+use PhpParser\Node\Identifier;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\MethodReflection;
@@ -11,12 +13,13 @@ use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\Constant\ConstantArrayTypeBuilder;
 use PHPStan\Type\Constant\ConstantStringType;
 use PHPStan\Type\DynamicMethodReturnTypeExtension;
+use PHPStan\Type\DynamicStaticMethodReturnTypeExtension;
 use PHPStan\Type\NeverType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
 use Shredio\PhpstanRules\Helper\PhpStanReflectionHelper;
 
-final readonly class ObjectVarsMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
+final readonly class ObjectVarsMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension, DynamicStaticMethodReturnTypeExtension
 {
 
 	/**
@@ -55,6 +58,45 @@ final readonly class ObjectVarsMethodReturnTypeExtension implements DynamicMetho
 		// options
 		$optionsArg = $methodCall->getArgs()[0] ?? null;
 		$optionsType = $optionsArg === null ? null : $scope->getType($optionsArg->value);
+
+		$calledOnType = $scope->getType($methodCall->var);
+		$classReflections = $calledOnType->getObjectClassReflections();
+		if (count($classReflections) !== 1) {
+			throw new LogicException('Only one class reflection is supported.');
+		}
+
+		$classReflection = $calledOnType->getObjectClassReflections()[0];
+
+		return $this->createType($optionsType, $classReflection);
+	}
+
+	public function isStaticMethodSupported(MethodReflection $methodReflection): bool
+	{
+		return $this->isMethodSupported($methodReflection);
+	}
+
+	public function getTypeFromStaticMethodCall(
+		MethodReflection $methodReflection,
+		StaticCall $methodCall,
+		Scope $scope,
+	): ?Type
+	{
+		$classReflection = $scope->getClassReflection();
+		if ($classReflection === null) {
+			return null;
+		}
+		if ($methodReflection->getDeclaringClass()->getName() !== $this->className) { // covers parent:: call
+			return null;
+		}
+
+		$optionsArg = $methodCall->getArgs()[0] ?? null;
+		$optionsType = $optionsArg === null ? null : $scope->getType($optionsArg->value);
+
+		return $this->createType($optionsType, $classReflection);
+	}
+
+	private function createType(?Type $optionsType, ClassReflection $classReflection): Type
+	{
 		$options = $this->getOptions($optionsType);
 
 		// options.reference
@@ -68,13 +110,6 @@ final readonly class ObjectVarsMethodReturnTypeExtension implements DynamicMetho
 			return new NeverType();
 		}
 
-		$calledOnType = $scope->getType($methodCall->var);
-		$classReflections = $calledOnType->getObjectClassReflections();
-		if (count($classReflections) !== 1) {
-			throw new LogicException('Only one class reflection is supported.');
-		}
-
-		$classReflection = $calledOnType->getObjectClassReflections()[0];
 		$builder = ConstantArrayTypeBuilder::createEmpty();
 		foreach ($this->reflectionHelper->getTypeOfReadablePropertiesFromReflection($classReflection, $pick) as $propertyName => $propertyType) {
 			if (isset($values[$propertyName])) {

@@ -87,6 +87,23 @@ final readonly class ObjectVarsMethodReturnTypeExtensionData
 		assertType('array{other: string}', $object->toArray());
 	}
 
+	public function testOverrideWithParentCall(): void
+	{
+		$object = new class extends DataTransferObject {
+			public int $id = 1;
+			public string $name = 'Test Name';
+
+			/**
+			 * @return array{ other: string }
+			 */
+			public function toArray(array $options = []): array
+			{
+				assertType('array{id: int, name: string}', parent::toArray());
+				return [];
+			}
+		};
+	}
+
 }
 
 class Article extends DataTransferObject {
