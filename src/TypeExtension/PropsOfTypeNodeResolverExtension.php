@@ -9,14 +9,23 @@ use PHPStan\PhpDoc\TypeNodeResolverExtension;
 use PHPStan\PhpDocParser\Ast\Type\GenericTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use PHPStan\Type\Constant\ConstantStringType;
+use PHPStan\Type\ErrorType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
+use Shredio\PhpStanHelpers\Exception\CannotCombinePickWithOmitException;
+use Shredio\PhpStanHelpers\Exception\EmptyTypeException;
+use Shredio\PhpStanHelpers\Exception\InvalidTypeException;
+use Shredio\PhpStanHelpers\Exception\NonConstantTypeException;
+use Shredio\PhpStanHelpers\Helper\PropertyPicker;
 use Shredio\PhpStanHelpers\PhpStanReflectionHelper;
 
 final class PropsOfTypeNodeResolverExtension implements TypeNodeResolverExtension, TypeNodeResolverAwareExtension
 {
 
 	private TypeNodeResolver $typeNodeResolver;
+
+	/** @var array<class-string, bool> */
+	private static array $stack = [];
 
 	public function __construct(
 		private readonly PhpStanReflectionHelper $reflectionHelper,
@@ -41,7 +50,8 @@ final class PropsOfTypeNodeResolverExtension implements TypeNodeResolverExtensio
 		}
 
 		$arguments = $typeNode->genericTypes;
-		if (count($arguments) !== 1) {
+		$count = count($arguments);
+		if ($count === 0 || $count > 2) {
 			return null;
 		}
 
@@ -50,12 +60,30 @@ final class PropsOfTypeNodeResolverExtension implements TypeNodeResolverExtensio
 			return null;
 		}
 
+		$omitType = isset($arguments[1]) ? $this->typeNodeResolver->resolve($arguments[1], $nameScope) : null;
+		if ($omitType === null) {
+			$picker = PropertyPicker::empty();
+		} else {
+			try {
+				$picker = new PropertyPicker(omit: $this->reflectionHelper->getNonEmptyStringsFromStringType($omitType));
+			} catch (InvalidTypeException|NonConstantTypeException|EmptyTypeException|CannotCombinePickWithOmitException) {
+				$picker = PropertyPicker::empty();
+			}
+		}
+
 		$types = [];
 		foreach ($objectType->getObjectClassReflections() as $reflectionClass) {
-			$properties = $this->reflectionHelper->getReadablePropertiesFromReflection($reflectionClass);
-			foreach ($properties as $propertyName => $_) {
+			if (isset(self::$stack[$reflectionClass->getName()])) {
+				return new ErrorType();
+			}
+
+			self::$stack[$reflectionClass->getName()] = true;
+			$properties = $this->reflectionHelper->getReadablePropertiesFromReflection($reflectionClass, $picker);
+			foreach ($properties as $propertyName => $type) {
 				$types[] = new ConstantStringType($propertyName);
 			}
+
+			unset(self::$stack[$reflectionClass->getName()]);
 		}
 
 		return TypeCombinator::union(...$types);

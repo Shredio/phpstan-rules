@@ -15,9 +15,11 @@ use PHPStan\Type\DynamicStaticMethodReturnTypeExtension;
 use PHPStan\Type\NeverType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
+use Shredio\PhpStanHelpers\Exception\CannotCombinePickWithOmitException;
 use Shredio\PhpStanHelpers\Exception\EmptyTypeException;
 use Shredio\PhpStanHelpers\Exception\InvalidTypeException;
 use Shredio\PhpStanHelpers\Exception\NonConstantTypeException;
+use Shredio\PhpStanHelpers\Helper\PropertyPicker;
 use Shredio\PhpStanHelpers\PhpStanReflectionHelper;
 
 /**
@@ -109,7 +111,13 @@ final readonly class ObjectVarsMethodReturnTypeExtension implements DynamicMetho
 		$options['values'] = [];
 
 		$builder = ConstantArrayTypeBuilder::createEmpty();
-		foreach ($this->reflectionHelper->getReadablePropertiesFromReflection($classReflection, $options['pick']) as $propertyName => $reflectionProperty) {
+		try {
+			$picker = new PropertyPicker($options['pick'] === null ? null : array_keys($options['pick']));
+		} catch (CannotCombinePickWithOmitException) {
+			throw new LogicException('Should not happen, pick is always set and omit is never set.');
+		}
+
+		foreach ($this->reflectionHelper->getReadablePropertiesFromReflection($classReflection, $picker) as $propertyName => $reflectionProperty) {
 			if (isset($values[$propertyName])) {
 				continue;
 			}
