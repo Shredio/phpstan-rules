@@ -1,7 +1,5 @@
 services:
 	-
-		class: Shredio\PhpstanRules\Helper\PhpStanReflectionHelper
-	-
 		class: Shredio\PhpstanRules\TypeExtension\GetObjectVarsMethodReturnTypeExtension
 		arguments: [Tests\Common\ObjectHelper, toArray]
 		tags:
@@ -19,3 +17,6 @@ services:
 		class: Shredio\PhpstanRules\TypeExtension\PropsOfTypeNodeResolverExtension
 		tags:
 			- phpstan.phpDoc.typeNodeResolverExtension
+
+includes:
+	- ../../../vendor/shredio/phpstan-helpers/extension.neon

@@ -4,7 +4,7 @@ namespace Tests\Unit\Rule\CloneWith;
 
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
-use Shredio\PhpstanRules\Helper\PhpStanReflectionHelper;
+use Shredio\PhpStanHelpers\PhpStanReflectionHelper;
 use Shredio\PhpstanRules\Rule\CloneWithRule;
 use Tests\Common\DataTransferObject;
 

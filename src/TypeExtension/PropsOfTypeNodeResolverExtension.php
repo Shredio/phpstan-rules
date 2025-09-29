@@ -8,11 +8,10 @@ use PHPStan\PhpDoc\TypeNodeResolverAwareExtension;
 use PHPStan\PhpDoc\TypeNodeResolverExtension;
 use PHPStan\PhpDocParser\Ast\Type\GenericTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
-use PHPStan\Type\Constant\ConstantArrayTypeBuilder;
 use PHPStan\Type\Constant\ConstantStringType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
-use Shredio\PhpstanRules\Helper\PhpStanReflectionHelper;
+use Shredio\PhpStanHelpers\PhpStanReflectionHelper;
 
 final class PropsOfTypeNodeResolverExtension implements TypeNodeResolverExtension, TypeNodeResolverAwareExtension
 {
@@ -53,7 +52,7 @@ final class PropsOfTypeNodeResolverExtension implements TypeNodeResolverExtensio
 
 		$types = [];
 		foreach ($objectType->getObjectClassReflections() as $reflectionClass) {
-			$properties = $this->reflectionHelper->getTypeOfReadablePropertiesFromReflection($reflectionClass);
+			$properties = $this->reflectionHelper->getReadablePropertiesFromReflection($reflectionClass);
 			foreach ($properties as $propertyName => $_) {
 				$types[] = new ConstantStringType($propertyName);
 			}

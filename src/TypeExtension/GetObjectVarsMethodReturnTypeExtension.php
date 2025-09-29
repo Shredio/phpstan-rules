@@ -10,7 +10,7 @@ use PHPStan\Type\Constant\ConstantStringType;
 use PHPStan\Type\DynamicStaticMethodReturnTypeExtension;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
-use Shredio\PhpstanRules\Helper\PhpStanReflectionHelper;
+use Shredio\PhpStanHelpers\PhpStanReflectionHelper;
 
 final readonly class GetObjectVarsMethodReturnTypeExtension implements DynamicStaticMethodReturnTypeExtension
 {
@@ -55,8 +55,8 @@ final readonly class GetObjectVarsMethodReturnTypeExtension implements DynamicSt
 		$types = [];
 		foreach ($objectType->getObjectClassReflections() as $classReflection) {
 			$builder = ConstantArrayTypeBuilder::createEmpty();
-			foreach ($this->reflectionHelper->getTypeOfReadablePropertiesFromReflection($classReflection) as $propertyName => $propertyType) {
-				$builder->setOffsetValueType(new ConstantStringType($propertyName), $propertyType);
+			foreach ($this->reflectionHelper->getReadablePropertiesFromReflection($classReflection) as $propertyName => $reflectionProperty) {
+				$builder->setOffsetValueType(new ConstantStringType($propertyName), $reflectionProperty->getReadableType());
 			}
 			$types[] = $builder->getArray();
 		}

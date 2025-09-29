@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\TypeExtension;
 
+use Tests\Classes\AccessObject;
 use Tests\Classes\ComplexPost;
 use Tests\Classes\SimpleArticle;
 use function PHPStan\Testing\assertType;
@@ -15,6 +16,14 @@ final readonly class PropsOfTypeExtensionData
 	public function testSimpleObject(string $value): void
 	{
 		assertType("'content'|'createdAt'|'id'|'image'|'isPublished'|'tags'|'title'", $value);
+	}
+
+	/**
+	 * @param PropsOf<AccessObject> $value
+	 */
+	public function testAccess(string $value): void
+	{
+		assertType("'hookBoth'|'hookGet'|'privateSet'|'protectedSet'|'readonlyPublic'|'regularPublic'", $value);
 	}
 
 	/**

@@ -5,20 +5,24 @@ namespace Shredio\PhpstanRules\TypeExtension;
 use LogicException;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\StaticCall;
-use PhpParser\Node\Identifier;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\MethodReflection;
-use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\Constant\ConstantArrayTypeBuilder;
 use PHPStan\Type\Constant\ConstantStringType;
 use PHPStan\Type\DynamicMethodReturnTypeExtension;
 use PHPStan\Type\DynamicStaticMethodReturnTypeExtension;
 use PHPStan\Type\NeverType;
+use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
-use PHPStan\Type\TypeCombinator;
-use Shredio\PhpstanRules\Helper\PhpStanReflectionHelper;
+use Shredio\PhpStanHelpers\Exception\EmptyTypeException;
+use Shredio\PhpStanHelpers\Exception\InvalidTypeException;
+use Shredio\PhpStanHelpers\Exception\NonConstantTypeException;
+use Shredio\PhpStanHelpers\PhpStanReflectionHelper;
 
+/**
+ * @phpstan-type OptionsType array{ target: ?ClassReflection, pick: array<string, bool>|null, values: array<non-empty-string, Type>, recursive: bool }
+ */
 final readonly class ObjectVarsMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension, DynamicStaticMethodReturnTypeExtension
 {
 
@@ -29,7 +33,6 @@ final readonly class ObjectVarsMethodReturnTypeExtension implements DynamicMetho
 		private string $className,
 		private string $methodName,
 		private PhpStanReflectionHelper $reflectionHelper,
-		private ReflectionProvider $reflectionProvider,
 	)
 	{
 	}
@@ -95,28 +98,30 @@ final readonly class ObjectVarsMethodReturnTypeExtension implements DynamicMetho
 		return $this->createType($optionsType, $classReflection);
 	}
 
-	private function createType(?Type $optionsType, ClassReflection $classReflection): Type
+	/**
+	 * @param ClassReflection $classReflection
+	 * @param OptionsType $options
+	 * @return Type
+	 */
+	private function _createType(ClassReflection $classReflection, array $options): Type
 	{
-		$options = $this->getOptions($optionsType);
-
-		// options.reference
-		$target = $this->getClassStringFrom($options['target'] ?? null);
-		$targetReflection = $this->getReflectionClassFrom($target);
-		$pick = $this->getConstructorParameters($targetReflection);
-
-		// options.values
-		$values = $this->getTypesFromConstantArray($options['values'] ?? null) ?? [];
-		if ($values === false) {
-			return new NeverType();
-		}
+		$values = $options['values'];
+		$options['values'] = [];
 
 		$builder = ConstantArrayTypeBuilder::createEmpty();
-		foreach ($this->reflectionHelper->getTypeOfReadablePropertiesFromReflection($classReflection, $pick) as $propertyName => $propertyType) {
+		foreach ($this->reflectionHelper->getReadablePropertiesFromReflection($classReflection, $options['pick']) as $propertyName => $reflectionProperty) {
 			if (isset($values[$propertyName])) {
 				continue;
 			}
 
-			$builder->setOffsetValueType(new ConstantStringType($propertyName), $propertyType);
+			$readableType = $reflectionProperty->getReadableType();
+			if ($options['recursive'] && (new ObjectType($this->className))->isSuperTypeOf($readableType)->yes()) {
+				$reflections = $readableType->getObjectClassReflections();
+				if (count($reflections) === 1) {
+					$readableType = $this->_createType($reflections[0], $options);
+				}
+			}
+			$builder->setOffsetValueType(new ConstantStringType($propertyName), $readableType);
 		}
 
 		foreach ($values as $key => $type) {
@@ -126,120 +131,81 @@ final readonly class ObjectVarsMethodReturnTypeExtension implements DynamicMetho
 		return $builder->getArray();
 	}
 
-	/**
-	 * @return array<string, true>|null
-	 */
-	private function getConstructorParameters(?ClassReflection $reflection): ?array
+	private function createType(?Type $optionsType, ClassReflection $classReflection): Type
 	{
-		if ($reflection === null) {
-			return null;
+		$options = $this->buildOptionsFromType($optionsType);
+		if ($options === null) {
+			return new NeverType(); // invalid options
 		}
 
-		$constructor = $reflection->getNativeReflection()->getConstructor();
-		if ($constructor === null || !$constructor->isPublic()) {
-			return [];
-		}
-
-		$parameters = [];
-		foreach ($constructor->getParameters() as $parameter) {
-			$parameters[$parameter->getName()] = true;
-		}
-
-		return $parameters;
+		return $this->_createType($classReflection, $options);
 	}
 
 	/**
-	 * @param class-string|null $className
+	 * @return OptionsType|null
 	 */
-	private function getReflectionClassFrom(?string $className): ?ClassReflection
+	private function buildOptionsFromType(?Type $optionsType): ?array
 	{
-		if ($className === null) {
-			return null;
-		}
-		if (!$this->reflectionProvider->hasClass($className)) {
-			return null;
-		}
-
-		return $this->reflectionProvider->getClass($className);
-	}
-
-	/**
-	 * @return class-string|null
-	 */
-	private function getClassStringFrom(?Type $type): ?string
-	{
-		if ($type === null || !$type->isClassString()->yes()) {
-			return null;
-		}
-
-		foreach ($type->getConstantStrings() as $constantString) {
-			$value = $constantString->getValue();
-			if ($value !== '') {
-				/** @var class-string */
-				return $value;
+		try {
+			if ($optionsType === null) {
+				$options = [];
+			} else {
+				$options = $this->reflectionHelper->getNonEmptyStringKeyWithTypeFromConstantArray($optionsType);
 			}
+		} catch (InvalidTypeException|NonConstantTypeException) {
+			return null; // not a constant array
 		}
 
-		return null;
-	}
-
-	/**
-	 * @param Type|null $optionsType
-	 * @return array<non-empty-string, Type>
-	 */
-	private function getOptions(?Type $optionsType): array
-	{
-		if ($optionsType === null) {
-			return [];
-		}
-
-		return $this->reflectionHelper->getStringKeyArrayOfTypesFromType($optionsType);
-	}
-
-	/**
-	 * @param Type|null $type
-	 * @return array<non-empty-string, Type>|false|null
-	 */
-	private function getTypesFromConstantArray(?Type $type): array|false|null
-	{
-		if ($type === null) {
+		// options.target
+		try {
+			if (!isset($options['target'])) {
+				$targetReflection = null;
+			} else {
+				$targetReflection = $this->reflectionHelper->getClassReflectionFromClassString($options['target']);
+			}
+		} catch (InvalidTypeException|EmptyTypeException) {
 			return null;
 		}
-		if (!$type->isConstantArray()->yes()) {
-			return false;
-		}
 
-		$types = [];
-		$unionTypes = [];
-		foreach ($type->getConstantArrays() as $constantArray) {
-			$valueTypes = $constantArray->getValueTypes();
-			foreach ($constantArray->getKeyTypes() as $i => $keyType) {
-				$key = $keyType->getValue();
-				if (!is_string($key) || $key === '') {
-					continue;
-				}
-				if (!isset($valueTypes[$i])) {
-					continue;
-				}
-
-				if (isset($types[$key])) {
-					if (!is_array($types[$key])) {
-						$types[$key] = [$types[$key]];
-						$unionTypes[] = $key;
-					}
-
-					$types[$key][] = $valueTypes[$i];
-				} else {
-					$types[$key] = $valueTypes[$i];
+		if ($targetReflection !== null) {
+			$pick = [];
+			if ($targetReflection->hasConstructor()) {
+				foreach ($this->reflectionHelper->getParametersFromMethod($targetReflection->getConstructor()) as $name => $_) {
+					$pick[$name] = true;
 				}
 			}
+		} else {
+			$pick = null;
 		}
 
-		foreach ($unionTypes as $key) {
-			$types[$key] = TypeCombinator::union(...$types[$key]); // @phpstan-ignore argument.unpackNonIterable
+		// options.values
+		try {
+			if (!isset($options['values'])) {
+				$values = [];
+			} else {
+				$values = $this->reflectionHelper->getNonEmptyStringKeyWithTypeFromConstantArray($options['values']);
+			}
+		} catch (InvalidTypeException|NonConstantTypeException) {
+			return null; // not a constant array
 		}
 
-		return $types; // @phpstan-ignore return.type
+		// options.recursive
+		try {
+			if (!isset($options['recursive'])) {
+				$recursive = false;
+			} else {
+				$recursive = $this->reflectionHelper->getTrueOrFalseFromConstantBoolean($options['recursive']);
+			}
+		} catch (InvalidTypeException|NonConstantTypeException) {
+			return null; // not a constant boolean
+		}
+
+		return [
+			'target' => $targetReflection,
+			'pick' => $pick,
+			'values' => $values,
+			'recursive' => $recursive,
+		];
 	}
 
 }

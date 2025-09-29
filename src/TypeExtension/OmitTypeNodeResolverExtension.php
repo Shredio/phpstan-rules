@@ -12,7 +12,7 @@ use PHPStan\Type\Constant\ConstantArrayTypeBuilder;
 use PHPStan\Type\Constant\ConstantStringType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
-use Shredio\PhpstanRules\Helper\PhpStanReflectionHelper;
+use Shredio\PhpStanHelpers\PhpStanReflectionHelper;
 
 final class OmitTypeNodeResolverExtension implements TypeNodeResolverExtension, TypeNodeResolverAwareExtension
 {
@@ -64,19 +64,16 @@ final class OmitTypeNodeResolverExtension implements TypeNodeResolverExtension, 
 	{
 		$types = [];
 		foreach ($coreType->getObjectClassReflections() as $reflectionClass) {
-			$properties = $this->reflectionHelper->getTypeOfReadablePropertiesFromReflection($reflectionClass);
+			$properties = $this->reflectionHelper->getReadablePropertiesFromReflection($reflectionClass);
 			$newTypeBuilder = ConstantArrayTypeBuilder::createEmpty();
-			foreach ($properties as $propertyName => $propertyType) {
+			foreach ($properties as $propertyName => $reflectionProperty) {
 				$keyType = new ConstantStringType($propertyName);
 				if ($typeToOmit->isSuperTypeOf($keyType)->yes()) {
 					// eliminate keys that are in the Omit type
 					continue;
 				}
 
-				$newTypeBuilder->setOffsetValueType(
-					$keyType,
-					$propertyType,
-				);
+				$newTypeBuilder->setOffsetValueType($keyType, $reflectionProperty->getReadableType());
 			}
 
 			$types[] = $newTypeBuilder->getArray();

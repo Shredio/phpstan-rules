@@ -9,7 +9,9 @@ use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
 use PHPStan\Type\VerbosityLevel;
-use Shredio\PhpstanRules\Helper\PhpStanReflectionHelper;
+use Shredio\PhpStanHelpers\Exception\InvalidTypeException;
+use Shredio\PhpStanHelpers\Exception\NonConstantTypeException;
+use Shredio\PhpStanHelpers\PhpStanReflectionHelper;
 
 /**
  * @implements Rule<Node\Expr\MethodCall>
@@ -65,20 +67,6 @@ final readonly class CloneWithRule implements Rule
 			return [];
 		}
 
-		$arrayType = $scope->getType($args[0]->value);
-		if (!$arrayType->isConstantArray()->yes()) {
-			return [
-				RuleErrorBuilder::message(sprintf(
-					'First argument of %s::%s() must be a constant array, but got %s.',
-					$classReflection->getName(),
-					$this->methodName,
-					$arrayType->describe(VerbosityLevel::precise()),
-				))
-					->identifier('shredio.cloneWith.argumentType')
-					->build(),
-			];
-		}
-
 		if (!$classReflection->hasConstructor()) {
 			return [
 				RuleErrorBuilder::message(sprintf(
@@ -92,7 +80,22 @@ final readonly class CloneWithRule implements Rule
 			];
 		}
 
-		$fieldsToClone = $this->reflectionHelper->getStringKeyArrayOfTypesFromType($arrayType);
+		$arrayType = $scope->getType($args[0]->value);
+		try {
+			$fieldsToClone = $this->reflectionHelper->getNonEmptyStringKeyWithTypeFromConstantArray($arrayType);
+		} catch (InvalidTypeException|NonConstantTypeException) {
+			return [
+				RuleErrorBuilder::message(sprintf(
+					'First argument of %s::%s() must be a constant array, but got %s.',
+					$classReflection->getName(),
+					$this->methodName,
+					$arrayType->describe(VerbosityLevel::precise()),
+				))
+					->identifier('shredio.cloneWith.argumentType')
+					->build(),
+			];
+		}
+
 		$errors = [];
 		foreach ($this->reflectionHelper->getParametersFromMethod($classReflection->getConstructor()) as $parameter) {
 			$parameterName = $parameter->getName();

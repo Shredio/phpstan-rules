@@ -14,7 +14,7 @@ abstract class DataTransferObject
 	}
 
 	/**
-	 * @param array{ target?: class-string, values?: array<non-empty-string, mixed> } $options
+	 * @param array{ target?: class-string, values?: array<non-empty-string, mixed>, unpack: bool } $options
 	 * @return array<string, mixed>
 	 */
 	public function toArray(array $options = []): array

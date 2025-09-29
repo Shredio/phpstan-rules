@@ -14,7 +14,7 @@ use PHPStan\Type\DynamicStaticMethodReturnTypeExtension;
 use PHPStan\Type\NeverType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
-use Shredio\PhpstanRules\Helper\PhpStanReflectionHelper;
+use Shredio\PhpStanHelpers\PhpStanReflectionHelper;
 
 final readonly class GetObjectVarsByReferenceMethodReturnTypeExtension implements DynamicStaticMethodReturnTypeExtension
 {
@@ -84,12 +84,12 @@ final readonly class GetObjectVarsByReferenceMethodReturnTypeExtension implement
 		}
 
 		$builder = ConstantArrayTypeBuilder::createEmpty();
-		foreach ($this->reflectionHelper->getTypeOfReadablePropertiesFromReflection($reflectionClass) as $propertyName => $propertyType) {
+		foreach ($this->reflectionHelper->getReadablePropertiesFromReflection($reflectionClass) as $propertyName => $propertyReflection) {
 			if (!isset($parameters[$propertyName])) {
 				continue;
 			}
 
-			$builder->setOffsetValueType(new ConstantStringType($propertyName), $propertyType);
+			$builder->setOffsetValueType(new ConstantStringType($propertyName), $propertyReflection->getReadableType());
 		}
 
 		$arrayToReturn = $builder->getArray();

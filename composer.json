@@ -3,7 +3,8 @@
 	"type": "phpstan-extension",
 	"license": "MIT",
 	"require": {
-		"php": ">=8.4"
+		"php": ">=8.4",
+		"shredio/phpstan-helpers": "^1.0.1"
 	},
 	"autoload": {
 		"psr-4": {

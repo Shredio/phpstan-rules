@@ -69,6 +69,22 @@ final readonly class ObjectVarsMethodReturnTypeExtensionData
 		};
 	}
 
+	public function testDeep(): void
+	{
+		$object = new DeepObjectWithArticle();
+
+		assertType('array{title: string, article: Tests\Unit\TypeExtension\ObjectVarsMethodReturnTypeExtension\Article}', $object->toArray());
+	}
+
+	public function testDeepUnpack (): void
+	{
+		$object = new DeepObjectWithArticle();
+
+		assertType('array{title: string, article: array{id: int, title: string, content: string}}', $object->toArray([
+			'recursive' => true,
+		]));
+	}
+
 	public function testOverride(): void
 	{
 		$object = new class extends DataTransferObject {
@@ -103,6 +119,15 @@ final readonly class ObjectVarsMethodReturnTypeExtensionData
 			}
 		};
 	}
+
+}
+
+class DeepObjectWithArticle extends DataTransferObject
+{
+
+	public string $title = 'Test';
+
+	public Article $article;
 
 }
 
