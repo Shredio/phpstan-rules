@@ -13,8 +13,6 @@ parametersSchema:
 
 services:
 	-
-		class: Shredio\PhpstanRules\Helper\PhpStanReflectionHelper
-	-
 		class: Shredio\PhpstanRules\TypeExtension\GetObjectVarsMethodReturnTypeExtension
 		arguments: [%shredio.getObjectVarsStaticMethod.class%, %shredio.getObjectVarsStaticMethod.method%]
 		tags:
