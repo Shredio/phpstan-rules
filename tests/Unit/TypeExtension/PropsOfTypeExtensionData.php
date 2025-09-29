@@ -11,7 +11,7 @@ final readonly class PropsOfTypeExtensionData
 {
 
 	/**
-	 * @param PropsOf<SimpleArticle> $value
+	 * @param props-of<SimpleArticle> $value
 	 */
 	public function testSimpleObject(string $value): void
 	{
@@ -19,7 +19,7 @@ final readonly class PropsOfTypeExtensionData
 	}
 
 	/**
-	 * @param PropsOf<AccessObject> $value
+	 * @param props-of<AccessObject> $value
 	 */
 	public function testAccess(string $value): void
 	{
@@ -27,7 +27,7 @@ final readonly class PropsOfTypeExtensionData
 	}
 
 	/**
-	 * @param PropsOf<ComplexPost> $value
+	 * @param props-of<ComplexPost> $value
 	 */
 	public function testComplexObject(string $value): void
 	{
@@ -35,7 +35,7 @@ final readonly class PropsOfTypeExtensionData
 	}
 
 	/**
-	 * @param PropsOf<'invalid'> $value
+	 * @param props-of<'invalid'> $value
 	 */
 	public function testInvalidType(string $value): void
 	{
