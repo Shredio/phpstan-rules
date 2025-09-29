@@ -1,6 +1,0 @@
-services:
-	-
-		class: Shredio\PhpstanRules\Rule\GetObjectVarsByReferenceRule
-		arguments: [%shredio.getObjectVarsByReferenceStaticMethod.class%, %shredio.getObjectVarsByReferenceStaticMethod.method%]
-		tags:
-			- phpstan.rules.rule

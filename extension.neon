@@ -1,27 +1,4 @@
-parametersSchema:
-	shredio: structure([
-		getObjectVarsStaticMethod: structure([
-			class: string()
-			method: string()
-		])
-
-		getObjectVarsByReferenceStaticMethod: structure([
-			class: string()
-			method: string()
-		])
-	])
-
 services:
-	-
-		class: Shredio\PhpstanRules\TypeExtension\GetObjectVarsMethodReturnTypeExtension
-		arguments: [%shredio.getObjectVarsStaticMethod.class%, %shredio.getObjectVarsStaticMethod.method%]
-		tags:
-			- phpstan.broker.dynamicStaticMethodReturnTypeExtension
-	-
-		class: Shredio\PhpstanRules\TypeExtension\GetObjectVarsByReferenceMethodReturnTypeExtension
-		arguments: [%shredio.getObjectVarsByReferenceStaticMethod.class%, %shredio.getObjectVarsByReferenceStaticMethod.method%]
-		tags:
-			- phpstan.broker.dynamicStaticMethodReturnTypeExtension
 	-
 		class: Shredio\PhpstanRules\TypeExtension\OmitTypeNodeResolverExtension
 		tags:
