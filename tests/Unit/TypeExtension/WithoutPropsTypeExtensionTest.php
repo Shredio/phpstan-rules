@@ -5,7 +5,7 @@ namespace Tests\Unit\TypeExtension;
 use PHPStan\Testing\TypeInferenceTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-final class OmitTypeExtensionTest extends TypeInferenceTestCase
+final class WithoutPropsTypeExtensionTest extends TypeInferenceTestCase
 {
 
 	/**
@@ -13,7 +13,7 @@ final class OmitTypeExtensionTest extends TypeInferenceTestCase
 	 */
 	public static function dataFileAsserts(): iterable
 	{
-		yield from self::gatherAssertTypes(__DIR__ . '/OmitTypeExtensionData.php');
+		yield from self::gatherAssertTypes(__DIR__ . '/WithoutPropsTypeExtensionData.php');
 	}
 
 	#[DataProvider('dataFileAsserts')]

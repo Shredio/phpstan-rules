@@ -14,7 +14,7 @@ use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
 use Shredio\PhpStanHelpers\PhpStanReflectionHelper;
 
-final class OmitTypeNodeResolverExtension implements TypeNodeResolverExtension, TypeNodeResolverAwareExtension
+final class WithoutPropsNodeResolverExtension implements TypeNodeResolverExtension, TypeNodeResolverAwareExtension
 {
 
 	private TypeNodeResolver $typeNodeResolver;
@@ -37,7 +37,7 @@ final class OmitTypeNodeResolverExtension implements TypeNodeResolverExtension, 
 		}
 
 		$typeName = $typeNode->type;
-		if ($typeName->name !== 'Omit') {
+		if ($typeName->name !== 'without-props') {
 			return null;
 		}
 

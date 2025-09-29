@@ -1,6 +1,6 @@
 services:
 	-
-		class: Shredio\PhpstanRules\TypeExtension\OmitTypeNodeResolverExtension
+		class: Shredio\PhpstanRules\TypeExtension\WithoutPropsNodeResolverExtension
 		tags:
 			- phpstan.phpDoc.typeNodeResolverExtension
 	-
