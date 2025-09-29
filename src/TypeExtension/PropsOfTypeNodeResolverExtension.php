@@ -36,7 +36,7 @@ final class PropsOfTypeNodeResolverExtension implements TypeNodeResolverExtensio
 		}
 
 		$typeName = $typeNode->type;
-		if ($typeName->name !== 'PropsOf') {
+		if ($typeName->name !== 'props-of') {
 			return null;
 		}
 
